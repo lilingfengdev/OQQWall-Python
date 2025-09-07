@@ -949,6 +949,30 @@ class QQReceiver(BaseReceiver):
                 await self.send_private_message(user_id, "评论失败：系统异常")
                 return True
 
+            # ===== 私聊反馈指令 =====
+            # 语法: #反馈 <内容>
+            fm = re.match(r"^#?反馈\s+(.+)$", text, re.S)
+            if fm:
+                feedback_text = fm.group(1).strip()
+                if not feedback_text:
+                    await self.send_private_message(user_id, "错误：反馈内容不能为空")
+                    return True
+                try:
+                    from pathlib import Path
+                    from datetime import datetime
+                    # 保存到 data/feedback 目录下，按时间和用户ID区分文件
+                    fb_dir = Path("data/feedback")
+                    fb_dir.mkdir(parents=True, exist_ok=True)
+                    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    fb_file = fb_dir / f"{ts}_{user_id}.txt"
+                    with open(fb_file, "w", encoding="utf-8") as f:
+                        f.write(feedback_text)
+                    await self.send_private_message(user_id, "反馈已收到，感谢您的意见！")
+                except Exception as e:
+                    self.logger.error(f"保存反馈失败: {e}", exc_info=True)
+                    await self.send_private_message(user_id, f"反馈保存失败: {e}")
+                return True
+
             # 不应到达此处
             return False
         except Exception as e:
