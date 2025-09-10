@@ -1,4 +1,4 @@
-# OQQWall-Python 使用指南
+# 使用指南
 
 ## 快速开始
 
@@ -11,8 +11,7 @@
 # Windows
 start.bat
 
-# 或直接运行
-# 确保设置 DRIVER=~fastapi 以启用 NoneBot2 FastAPI 驱动
+# 或直接运行（确保 DRIVER=~fastapi）
 DRIVER=~fastapi python main.py
 ```
 
@@ -29,34 +28,34 @@ DRIVER=~fastapi python main.py
 - 图片投稿：发送图片+文字描述
 - 多条消息：在2分钟内发送的多条消息会合并为一个投稿
 
-### 2. 自动处理
+### 2. 自动处理（处理管道）
 
 系统自动处理投稿：
-1. 内容审核（AI安全检查）
-2. 匿名检测（识别用户是否要求匿名）
-3. 内容渲染（生成图片）
-4. 发送到管理群审核
+1. LLM 解析（needpriv/safemsg/isover/segments）
+2. HTML 渲染（提取链接、生成 HTML）
+3. 图片渲染（Playwright 截图生成图片）
+4. 通知管理群审核
 
-### 3. 人工审核
+### 3. 人工审核（管理群指令）
 
 管理员在管理群中审核：
-- `@机器人 <编号> 是` - 通过投稿
-- `@机器人 <编号> 否` - 拒绝投稿
-- `@机器人 <编号> 匿` - 切换匿名状态
-- `@机器人 <编号> 等` - 暂缓处理
-- `@机器人 <编号> 删` - 删除投稿
+- `@机器人 <编号> 是` - 通过投稿（入暂存区并编号）
+- `@机器人 <编号> 否` - 跳过处理（标记为 rejected）
+- `@机器人 <编号> 匿` - 切换匿名状态并重渲染
+- `@机器人 <编号> 等` - 暂缓处理后再处理
+- `@机器人 <编号> 删` - 删除投稿及缓存
 - `@机器人 <编号> 拉黑` - 拉黑用户
 - `@机器人 <编号> 评论 <内容>` - 添加评论
-- `@机器人 <编号> 立即` - 立即发送
+- `@机器人 <编号> 立即` - 立即发布当前投稿
 
-### 4. 自动发布
+### 4. 发布与暂存
 
 通过审核的投稿会：
 - 暂存到发送队列
 - 根据配置的时间表自动发送
 - 或达到批量阈值后自动发送
 
-## CLI命令行工具
+## CLI 命令行工具
 
 ### 查看配置
 
@@ -166,6 +165,12 @@ account_groups:
 
 ### 水印设置
 
+### 发布到 Bilibili
+
+- 在 `config.yaml` 启用 `publishers.bilibili.enabled: true` 并准备 cookies 文件。
+- 批量/立即发布时，将同时向 B 站发布图文动态（受平台开关和 cookies 有效性影响）。
+- 详见：docs/bilibili.md
+
 为发布的图片添加水印：
 
 ```yaml
@@ -229,7 +234,7 @@ cp data/oqqwall.db.backup data/oqqwall.db
 tar xzf backup_20240101.tar.gz
 ```
 
-## 常见问题
+## 常见问题（FAQ）
 
 ### Q: 投稿没有收到？
 A: 检查：
@@ -334,6 +339,5 @@ class CustomProcessor(BaseProcessor):
 
 ## 更多帮助
 
-- 查看完整文档：[GitHub Wiki](https://github.com/your-repo/wiki)
-- 提交问题：[GitHub Issues](https://github.com/your-repo/issues)
-- 加入社区：QQ群 123456789
+- 仓库: https://github.com/lilingfengdev/OQQWall-Python
+- Issues: https://github.com/lilingfengdev/OQQWall-Python/issues

@@ -1,4 +1,4 @@
-# OQQWall-Python 安装指南
+# 安装与部署
 
 ## 系统要求
 
@@ -7,27 +7,16 @@
 - Chrome/Chromium浏览器（用于渲染）
 - NapCat/OneBot（QQ机器人框架）
 
-## 快速安装
+## 快速开始
 
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/your-repo/OQQWall-Python.git
+git clone https://github.com/lilingfengdev/OQQWall-Python.git
 cd OQQWall-Python
 ```
 
 ### 2. 安装依赖
-
-#### Linux/macOS
-```bash
-chmod +x start.sh
-./start.sh
-```
-
-#### Windows
-```cmd
-start.bat
-```
 
 #### 手动安装
 ```bash
@@ -41,7 +30,14 @@ source venv/bin/activate
 venv\Scripts\activate
 
 # 安装依赖
+pip install -U pip
 pip install -r requirements.txt
+```
+
+如需本地渲染图片，请安装 Playwright 浏览器驱动：
+
+```bash
+python -m playwright install chromium
 ```
 
 ### 3. 配置
@@ -62,11 +58,11 @@ cp config/config.example.yaml config/config.yaml
 cp .env.example .env
 ```
 
-### 4. 配置NapCat
+### 4. 启动 OneBot/NoneBot
 
-1. 安装NapCat或其他OneBot实现
-2. 配置HTTP webhook指向 `http://localhost:8082/webhook`
-3. 启动NapCat
+1. 安装 NapCat 或其他 OneBot v11 实现
+2. 使用 NoneBot2（FastAPI 驱动）。程序会设置 `DRIVER=~fastapi`
+3. 启动 OneBot 实现后，运行本项目即可接收事件
 
 ### 5. 初始化数据库
 
@@ -77,10 +73,10 @@ python cli.py db-init
 ### 6. 启动服务
 
 ```bash
-python main.py
+DRIVER=~fastapi python main.py
 ```
 
-## Docker安装
+## Docker
 
 ### 使用Docker Compose
 
@@ -100,7 +96,7 @@ docker-compose up -d
 docker-compose logs -f
 ```
 
-### 单独使用Docker
+### 手动构建运行
 
 1. 构建镜像：
 ```bash
@@ -229,5 +225,5 @@ pip install -r requirements.txt --upgrade
 
 ## 支持
 
-- 提交Issue: [GitHub Issues](https://github.com/your-repo/issues)
-- 文档: [Wiki](https://github.com/your-repo/wiki)
+- 仓库: https://github.com/lilingfengdev/OQQWall-Python
+- Issues: https://github.com/lilingfengdev/OQQWall-Python/issues
