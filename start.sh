@@ -36,6 +36,10 @@ echo -e "${YELLOW}检查依赖...${NC}"
 pip install -q --upgrade pip
 pip install -q -r requirements.txt
 
+# 安装 Playwright 浏览器（Chromium）
+echo -e "${YELLOW}安装 Playwright Chromium...${NC}"
+python3 -m playwright install chromium >/dev/null 2>&1 || true
+
 # 检查配置文件
 if [ ! -f "config/config.yaml" ]; then
     echo -e "${YELLOW}配置文件不存在，创建默认配置...${NC}"

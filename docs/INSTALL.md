@@ -3,112 +3,82 @@
 ## 系统要求
 
 - Python 3.9+
-- 4GB+ RAM
-- Chrome/Chromium浏览器（用于渲染）
-- NapCat/OneBot（QQ机器人框架）
+- 4GB+ RAM（推荐）
+- Chromium（用于渲染图片；通过 Playwright 安装，Docker 镜像已内置）
+- OneBot v11 实现（推荐 NapCat）
 
 ## 快速安装
 
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/your-repo/OQQWall-Python.git
+git clone https://github.com/lilingfengdev/OQQWall-Python.git
 cd OQQWall-Python
 ```
 
-### 2. 安装依赖
+### 2. 手动安装（或使用一键脚本）
 
-#### Linux/macOS
+#### Linux/macOS（推荐）
 ```bash
-chmod +x start.sh
-./start.sh
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+
+cp config/config.example.yaml config/config.yaml
+# 编辑 config/config.yaml（账号组、NapCat 端口、LLM 等）
+
+# 初始化数据库
+python cli.py db-init
+
+# 安装 Playwright Chromium（首次）并启动
+python -m playwright install chromium
+./start.sh  # 或 python main.py
 ```
 
 #### Windows
-```cmd
-start.bat
-```
-
-#### 手动安装
-```bash
-# 创建虚拟环境
-python3 -m venv venv
-
-# 激活虚拟环境
-# Linux/macOS:
-source venv/bin/activate
-# Windows:
+```bat
+python -m venv venv
 venv\Scripts\activate
-
-# 安装依赖
 pip install -r requirements.txt
-```
 
-### 3. 配置
-
-1. 复制配置文件模板：
-```bash
-cp config/config.example.yaml config/config.yaml
-```
-
-2. 编辑 `config/config.yaml`，填写必要的配置：
-   - LLM API密钥
-   - QQ账号信息
-   - 管理群ID
-   - NapCat端口配置
-
-3. （可选）创建环境变量文件：
-```bash
-cp .env.example .env
-```
-
-### 4. 配置NapCat
-
-1. 安装NapCat或其他OneBot实现
-2. 配置HTTP webhook指向 `http://localhost:8082/webhook`
-3. 启动NapCat
-
-### 5. 初始化数据库
-
-```bash
+copy config\config.example.yaml config\config.yaml
+REM 初始化数据库
 python cli.py db-init
+
+REM 启动
+start.bat  REM 或 python main.py
 ```
 
-### 6. 启动服务
+### 3. 对接 NapCat / OneBot v11
+
+在 NapCat（或任意 OneBot v11 实现）中配置“反向 WebSocket”连接到：
+
+- ws://<你的主机>:8082/onebot/v11/ws
+
+如在 `config.receivers.qq.access_token` 中设置了 Access Token，请在 NapCat 侧配置相同的 Token。
+
+QQ 空间发布器会优先尝试通过 NapCat 本地 HTTP 接口拉取 cookies（需要在 `account_groups.*.main_account.http_port` 指定端口，并确保本地接口提供 `/get_cookies?domain=qzone.qq.com`）。
+
+### 4. 健康检查
 
 ```bash
-python main.py
+curl http://localhost:8082/health
 ```
 
-## Docker安装
+## Docker 安装
 
-### 使用Docker Compose
+### Docker Compose
 
-1. 配置环境变量：
-```bash
-cp .env.example .env
-# 编辑.env文件，填写API密钥等
-```
-
-2. 启动服务：
 ```bash
 docker-compose up -d
-```
-
-3. 查看日志：
-```bash
 docker-compose logs -f
 ```
 
-### 单独使用Docker
+默认会挂载 `./config` 与 `./data`，并暴露 `8082` 端口。
 
-1. 构建镜像：
+### 单独使用 Docker
+
 ```bash
 docker build -t oqqwall .
-```
-
-2. 运行容器：
-```bash
 docker run -d \
   --name oqqwall \
   -p 8082:8082 \
@@ -118,116 +88,59 @@ docker run -d \
   oqqwall
 ```
 
-## 配置说明
+## 推荐配置（节选）
 
-### 账号组配置
+完整配置详见 docs/CONFIG.md，以下为账号组与接收/发布端的关键项：
 
 ```yaml
 account_groups:
-  group1:  # 组名
-    name: "第一组"
-    manage_group_id: "123456789"  # 管理群号
+  default:
+    name: "默认组"
+    manage_group_id: "123456789"
     main_account:
-      qq_id: "1234567890"  # 主账号QQ
-      http_port: 3000       # NapCat端口
-      http_token: ""        # Napcat HTTP Token（若启用）
-    minor_accounts:  # 副账号（可选）
-      - qq_id: "9876543210"
-        http_port: 3001
-        http_token: ""
-```
+      qq_id: "1234567890"
+      http_port: 3000
+      http_token: ""
+    minor_accounts: []
 
-### LLM配置
-
-支持的LLM提供商：
-- **dashscope** (阿里云通义千问)
-- **openai** (OpenAI GPT)
-
-```yaml
-llm:
-  provider: dashscope
-  api_key: sk-xxxxx  # API密钥
-  text_model: qwen-plus-latest  # 文本模型
-  vision_model: qwen-vl-max-latest  # 视觉模型
-```
-
-### 接收器配置
-
-```yaml
 receivers:
   qq:
     enabled: true
-    auto_accept_friend: true  # 自动同意好友请求
+    auto_accept_friend: true
     friend_request_window: 300
-    access_token: ""  # 若启用 OneBot 鉴权
-```
+    access_token: ""   # 若启用 OneBot 鉴权
 
-### 发送器配置
-
-```yaml
 publishers:
   qzone:
     enabled: true
-    max_attempts: 3  # 失败重试次数
-    batch_size: 30  # 批量发送数量
-    send_schedule: ["09:00", "12:00", "18:00", "21:00"]  # 定时发送
+    max_attempts: 3
+    batch_size: 30
+    send_schedule: ["09:00", "12:00", "18:00", "21:00"]
 ```
 
-## 故障排除
+## 常见问题（节选）
 
-### 1. 数据库连接失败
+更多问题与解决方案见 docs/TROUBLESHOOTING.md。
 
-检查数据目录权限：
-```bash
-chmod 755 data
-```
-
-### 2. NapCat连接失败
-
-- 确认NapCat正在运行
-- 检查端口配置是否正确
-- 确认webhook地址配置正确
-
-### 3. LLM调用失败
-
-- 检查API密钥是否正确
-- 确认账户余额充足
-- 检查网络连接
-
-### 4. 图片渲染失败
-
-安装Chrome/Chromium：
-```bash
-# Ubuntu/Debian
-sudo apt-get install chromium-browser
-
-# CentOS/RHEL
-sudo yum install chromium
-
-# macOS
-brew install chromium
-```
+- 数据库初始化失败：检查 `data/` 目录权限或路径是否存在。
+- NapCat 连接失败：
+  - 确认 NapCat 已运行且配置了反向 WS 到 `8082`；
+  - 如启用鉴权，核对 Access Token；
+  - 检查服务器防火墙与端口映射。
+- LLM 调用失败：核对 `llm.provider` 与 `llm.api_key`，并检查网络。
+- 图片渲染失败：执行 `python -m playwright install chromium` 或在 Docker 环境运行（镜像已内置）。
 
 ## 升级
 
-1. 备份数据：
 ```bash
+# 备份数据
 cp -r data data.backup
-```
 
-2. 更新代码：
-```bash
+# 拉取最新代码
 git pull
-```
 
-3. 更新依赖：
-```bash
+# 更新依赖
 pip install -r requirements.txt --upgrade
 ```
 
-4. 重启服务
-
-## 支持
-
-- 提交Issue: [GitHub Issues](https://github.com/your-repo/issues)
-- 文档: [Wiki](https://github.com/your-repo/wiki)
+重启服务后生效。

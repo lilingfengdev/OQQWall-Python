@@ -28,6 +28,10 @@ echo 检查依赖...
 python -m pip install --upgrade pip >nul
 pip install -r requirements.txt >nul
 
+REM 安装 Playwright 浏览器（Chromium）
+echo 安装 Playwright Chromium...
+python -m playwright install chromium >nul 2>&1
+
 REM 检查配置文件
 if not exist "config\config.yaml" (
     echo 配置文件不存在
